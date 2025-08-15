@@ -10,3 +10,4 @@ connect(connectionString)
   .catch((err) => console.error('MONGODB ERROR: ', err))
 
 module.exports = connection
+
