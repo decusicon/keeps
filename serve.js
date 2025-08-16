@@ -62,7 +62,7 @@ app.post("/UD92290", async (req, res) => {
 
   } catch (error) {
     console.log("CATCH ERR: ", error)
-    res.status(400).json({ response: error })
+    res.status(400).json({ response: error?.msg || error })
   }
 })
 
