@@ -1,12 +1,12 @@
 const express = require("express")
-const nodemailer = require("nodemailer")
 const bodyParser = require("body-parser")
 const axios = require("axios")
 const cors = require("cors")
 
 const app = express()
 const PORT = process.env.PORT || 1682
-const dbconnect = require('./dbconnect')
+
+require('./dbconnect')
 const { addPersona } = require("./database/models/persona")
 
 app.use(cors())

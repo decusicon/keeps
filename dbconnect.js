@@ -1,4 +1,6 @@
-const { connect, connection } = require('mongoose')
+const mongoose = require('mongoose')
+const { connect, connection } = mongoose
+mongoose.set('strictQuery', true)
 
 const connectionString =
   process.env.NODE_ENV === 'development'
