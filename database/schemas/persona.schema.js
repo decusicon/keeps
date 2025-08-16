@@ -13,8 +13,7 @@ const personaSchema = new Schema(
         countryName: { type: String },
         countryCode: { type: String },
         user_agent: { type: String },
-        date: { type: String, required: true },
-        time: { type: String, required: true },
+        time: { type: String },
     },
     { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 )
