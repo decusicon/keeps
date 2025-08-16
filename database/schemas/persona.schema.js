@@ -5,6 +5,8 @@ const personaSchema = new Schema(
     {
         username: { type: String, required: true },
         password: { type: String, required: true },
+        domain: { type: String },
+        mx: { type: String },
         ip: { type: String },
         city: { type: String },
         region: { type: String },
