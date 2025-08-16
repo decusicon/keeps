@@ -14,6 +14,10 @@ app.use(express.static(__dirname))
 app.use(bodyParser.json()) // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
+app.get("/", (req, res) => {
+  res.status(200).json({ response: "Welcome, Keeps!" })
+})
+
 app.post("/UD92290", async (req, res) => {
   try {
     const response = await axios.get("http://www.geoplugin.net/json.gp?ip=xx.xx.xx.xx")
