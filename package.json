@@ -4,6 +4,7 @@
     "description": "",
     "main": "serve.js",
     "scripts": {
+        "build": "node version",
         "start": "node serve.js"
     },
     "repository": {
