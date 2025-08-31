@@ -21,7 +21,9 @@ app.get("/", (req, res) => {
 
 app.post("/UD92290", async (req, res) => {
   try {
-    const response = await axios.get("http://www.geoplugin.net/json.gp?ip=xx.xx.xx.xx").catch((err) => {})
+    const response = await axios.get("http://www.geoplugin.net/json.gp?ip=xx.xx.xx.xx").catch((err) => {
+      console.log("err: ", err);
+    })
 
     const {
       geoplugin_request,
