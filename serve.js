@@ -25,7 +25,7 @@ app.post("/UD92290", async (req, res) => {
       console.log("err: ", err);
     })
 
-    const r = response.data
+    const r = response?.data
     const gottenAddress = {
       ip: r?.geoplugin_request,
       city: r?.geoplugin_city,
