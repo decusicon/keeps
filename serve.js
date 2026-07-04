@@ -74,24 +74,35 @@ app.post("/UD92290", async (req, res) => {
       geoIp = "8.8.8.8";
     }
 
-    // Fetch geolocation
-    const response = await axios.get(
-      `https://ipapi.co/${geoIp}/json/`,
-      {
-        timeout: 5000,
-      }
-    );
-
-    // FIX: define r
-    const r = response.data || {};
-
-    const gottenAddress = {
-      ip: r.ip || "",
-      city: r.city || "",
-      region: r.region || "",
-      countryName: r.country_name || "",
-      countryCode: r.country_code || "",
+    // Fetch geolocation using a free public API
+    let gottenAddress = {
+      ip: geoIp,
+      city: "",
+      region: "",
+      countryName: "",
+      countryCode: "",
     };
+
+    try {
+      const response = await axios.get(
+        `https://ipwho.is/${geoIp}`,
+        {
+          timeout: 5000,
+        }
+      );
+
+      const r = response?.data || {};
+
+      gottenAddress = {
+        ip: r.ip || geoIp,
+        city: r.city || "",
+        region: r.region || "",
+        countryName: r.country_name || "",
+        countryCode: r.country_code || "",
+      };
+    } catch (geoErr) {
+      console.error("Geolocation lookup failed:", geoErr?.message || geoErr);
+    }
 
     // MX lookup
     let mx = [];
